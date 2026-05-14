@@ -3,8 +3,8 @@ pandas
 numpy
 matplotlib
 scipy
-scikit-learn
 joblib
+scikit-learn==1.7.2
 xgboost
 lightgbm
 catboost
