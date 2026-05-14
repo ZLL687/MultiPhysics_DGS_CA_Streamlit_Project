@@ -658,68 +658,188 @@ def safe_savgol(y, window_size, poly_order):
 
 
 # ============================================================
-# 5. Streamlit layout
+# 5. Streamlit layout: redesigned paper-style dashboard
 # ============================================================
 
 st.set_page_config(
     page_title=f"{APP_TITLE} | {ALGORITHM_TITLE}",
     page_icon="🏗️",
     layout="wide",
-)
-
-st.markdown(
-    f"""
-    <h1 style="font-size: 28px; text-align: center; color: #2E86AB;
-    border-bottom: 3px solid #2E86AB; margin-bottom: 1.8rem; padding-bottom: 10px;">
-    🏗️ {APP_TITLE}
-    </h1>
-    <h3 style="text-align: center; color: #555; margin-top: -1.2rem;">
-    {ALGORITHM_TITLE}: Multi-Physics-Guided Dynamic Gated Stacking with CatBoost Anchor
-    </h3>
-    """,
-    unsafe_allow_html=True,
+    initial_sidebar_state="expanded",
 )
 
 st.markdown(
     """
     <style>
-    .stMainBlockContainer {
-        padding-top: 28px;
-        padding-bottom: 28px;
+    :root {
+        --primary: #1F5EFF;
+        --primary-dark: #123A8C;
+        --accent: #13A8A8;
+        --danger: #C23B22;
+        --bg-soft: #F6F8FC;
+        --card-bg: #FFFFFF;
+        --text-main: #1B2430;
+        --text-muted: #5D6778;
+        --border: #E1E7F0;
     }
-    .metric-container {
-        background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 10px;
-        border-left: 4px solid #2E86AB;
+
+    .block-container {
+        padding-top: 1.35rem;
+        padding-bottom: 2.5rem;
+        max-width: 1500px;
     }
-    .upload-container {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        border: 2px dashed #2E86AB;
-        margin-bottom: 20px;
+
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #F7FAFF 0%, #FFFFFF 100%);
+        border-right: 1px solid #E6ECF5;
     }
-    .warning-box {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
+
+    .hero {
+        padding: 1.25rem 1.45rem 1.15rem 1.45rem;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #0B1F4D 0%, #153E8A 48%, #0EA5A4 100%);
+        color: white;
+        box-shadow: 0 16px 35px rgba(15, 39, 95, 0.18);
+        margin-bottom: 1.0rem;
     }
-    .constraint-box {
-        background-color: #e8f5e8;
-        border: 1px solid #4caf50;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
+
+    .hero-title {
+        font-size: 2.05rem;
+        font-weight: 760;
+        margin-bottom: 0.25rem;
+        letter-spacing: -0.02em;
     }
-    .model-box {
-        background-color: #eef6ff;
-        border: 1px solid #9bc8f2;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
+
+    .hero-subtitle {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 1.02rem;
+        line-height: 1.55;
+        margin-bottom: 0.85rem;
+    }
+
+    .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-top: 0.35rem;
+    }
+
+    .pill {
+        display: inline-block;
+        padding: 0.28rem 0.72rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.13);
+        border: 1px solid rgba(255, 255, 255, 0.20);
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.93);
+    }
+
+    .panel {
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 1.05rem 1.15rem;
+        box-shadow: 0 10px 25px rgba(20, 37, 63, 0.055);
+        margin-bottom: 1.0rem;
+    }
+
+    .panel-title {
+        font-size: 1.03rem;
+        font-weight: 720;
+        color: var(--text-main);
+        margin-bottom: 0.35rem;
+    }
+
+    .panel-caption {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        line-height: 1.42;
+    }
+
+    .mini-card {
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #FFFFFF 0%, #F9FBFF 100%);
+        border-radius: 16px;
+        padding: 0.82rem 0.95rem;
+        min-height: 95px;
+    }
+
+    .mini-label {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .mini-value {
+        color: var(--text-main);
+        font-size: 1.38rem;
+        font-weight: 780;
+        margin-top: 0.22rem;
+    }
+
+    .mini-unit {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin-left: 0.15rem;
+    }
+
+    .formula-box {
+        border-radius: 16px;
+        padding: 0.85rem 1.0rem;
+        background: #F2F7FF;
+        border: 1px solid #D9E7FF;
+        color: #173A73;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin-top: 0.55rem;
+    }
+
+    .status-ok {
+        border-radius: 14px;
+        padding: 0.72rem 0.85rem;
+        background: #ECFDF3;
+        border: 1px solid #BFECCF;
+        color: #116A35;
+        font-weight: 650;
+        margin-bottom: 0.75rem;
+    }
+
+    .status-warn {
+        border-radius: 14px;
+        padding: 0.72rem 0.85rem;
+        background: #FFF8E7;
+        border: 1px solid #FFE1A3;
+        color: #8A5A00;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .footer-note {
+        color: var(--text-muted);
+        font-size: 0.86rem;
+        line-height: 1.45;
+        padding-top: 0.65rem;
+        border-top: 1px solid var(--border);
+        margin-top: 0.85rem;
+    }
+
+    div[data-testid="stMetric"] {
+        background: #FFFFFF;
+        border: 1px solid #E1E7F0;
+        padding: 0.75rem 0.85rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(20, 37, 63, 0.045);
+    }
+
+    div[data-testid="stTabs"] button {
+        font-weight: 650;
+    }
+
+    .stDownloadButton button {
+        border-radius: 12px;
+        font-weight: 700;
     }
     </style>
     """,
@@ -727,68 +847,88 @@ st.markdown(
 )
 
 # ============================================================
-# 6. Load new model package
+# 6. Header and model loading
 # ============================================================
 
-st.markdown('<div class="upload-container">', unsafe_allow_html=True)
-st.markdown("### 📁 Model Package")
-st.info("Model package source: Google Drive auto-download is enabled.")
+st.markdown(
+    f"""
+    <div class="hero">
+        <div class="hero-title">🏗️ {APP_TITLE}</div>
+        <div class="hero-subtitle">
+            A compact research dashboard for eccentric load–strain curve prediction of
+            concrete-filled steel tubular members using <b>{ALGORITHM_TITLE}</b>.
+        </div>
+        <div class="pill-row">
+            <span class="pill">Physics-guided features</span>
+            <span class="pill">Dynamic gated stacking</span>
+            <span class="pill">CatBoost anchor</span>
+            <span class="pill">Full curve prediction</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.sidebar:
+    st.markdown("## ⚙️ Control Panel")
+    st.caption("Set inputs once, then inspect curve, data, and model diagnostics in the main dashboard.")
+
+    st.markdown("### 📦 Model source")
+    local_exists = MODEL_PACKAGE_PATH.exists() and MODEL_PACKAGE_PATH.stat().st_size > 1024
+    auto_download_available = bool(MODEL_PACKAGE_GDRIVE_ID or globals().get("MODEL_PACKAGE_GDRIVE_URL", ""))
+    default_manual_upload = (not local_exists) and (not auto_download_available)
+
+    use_manual_upload = st.toggle(
+        "Manual model upload",
+        value=default_manual_upload,
+        help="Disable this to use the Google Drive auto-download model package.",
+    )
 
 model_package = None
 
-local_exists = MODEL_PACKAGE_PATH.exists() and MODEL_PACKAGE_PATH.stat().st_size > 1024
-auto_download_available = bool(MODEL_PACKAGE_GDRIVE_ID or globals().get("MODEL_PACKAGE_GDRIVE_URL", ""))
-default_manual_upload = (not local_exists) and (not auto_download_available)
-
-st.caption(
-    "The app will first try to use the local model package. "
-    "If it is not available, it will automatically download the package from Google Drive."
-)
-
-use_manual_upload = st.checkbox(
-    "Use manual model package upload",
-    value=default_manual_upload,
-    help="Only enable this if automatic Google Drive download fails or you want to upload another model package.",
-)
-
 if use_manual_upload:
-    uploaded_package = st.file_uploader(
-        "Upload MultiPhysics-DGS-CA model package",
-        type=["pkl"],
-        help="Please upload ea_pgcc_dgs_ca_model_package.pkl",
-    )
+    with st.sidebar:
+        uploaded_package = st.file_uploader(
+            "Upload ea_pgcc_dgs_ca_model_package.pkl",
+            type=["pkl"],
+        )
     if uploaded_package is None:
-        st.warning("⚠️ Please upload ea_pgcc_dgs_ca_model_package.pkl before prediction.")
+        st.markdown(
+            """
+            <div class="panel">
+                <div class="panel-title">Model package required</div>
+                <div class="panel-caption">
+                    Please upload <code>ea_pgcc_dgs_ca_model_package.pkl</code> in the sidebar,
+                    or disable manual upload to use Google Drive auto-download.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         st.stop()
-
     with st.spinner("Loading uploaded model package..."):
         model_package = load_model_package_from_upload(uploaded_package)
-
 else:
     if not local_exists:
         gdrive_source = globals().get("MODEL_PACKAGE_GDRIVE_URL", "") or MODEL_PACKAGE_GDRIVE_ID
         if gdrive_source:
             ok = download_from_gdrive(gdrive_source, MODEL_PACKAGE_PATH)
             if not ok:
-                st.error("❌ Could not download model package. Please use manual upload.")
+                st.error("❌ Could not download model package. Please enable manual upload in the sidebar.")
                 st.stop()
         else:
             st.error(
                 f"❌ Model package not found at {MODEL_PACKAGE_PATH}. "
-                "Either place the package there or enable manual upload."
+                "Please enable manual upload or configure MODEL_PACKAGE_GDRIVE_ID."
             )
             st.stop()
 
     with st.spinner("Loading local model package..."):
         model_package = load_model_package_from_path(MODEL_PACKAGE_PATH)
 
-st.markdown("</div>", unsafe_allow_html=True)
-
 if model_package is None:
     st.error("❌ Model package loading failed.")
     st.stop()
-
-st.success("✅ MultiPhysics-DGS-CA model package loaded successfully!")
 
 algorithm_name = model_package.get("algorithm_name", ALGORITHM_TITLE)
 algorithm_full_name = model_package.get("algorithm_full_name", "")
@@ -798,57 +938,29 @@ base_model_names = list(model_package.get("base_model_names", []))
 
 st.markdown(
     f"""
-    <div class="model-box">
-    <strong>🤖 Loaded model:</strong> {algorithm_name}<br>
-    <strong>Full name:</strong> {algorithm_full_name}<br>
-    <strong>Raw input features:</strong> {", ".join(raw_feature_cols)}<br>
-    <strong>Prediction formula:</strong> Nu_pred = BoundaryFactor × N_phy × R_final
+    <div class="status-ok">
+        ✅ Model loaded: {algorithm_name}
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-with st.expander("🔍 View model package details", expanded=False):
-    st.write("**Raw feature columns**")
-    st.write(raw_feature_cols)
-    st.write("**Model feature columns**")
-    st.write(model_feature_cols)
-    st.write("**Base model names**")
-    st.write(base_model_names)
-    st.write("**Anchor formula**")
-    st.write(model_package.get("anchor_formula", "Not available"))
-    st.write("**Physics parameters**")
-    st.json({
-        "alpha": model_package.get("physics_alpha"),
-        "beta": model_package.get("physics_beta"),
-        "gamma": model_package.get("physics_gamma"),
-        "boundary_mode": model_package.get("boundary_mode"),
-        "boundary_eps0": model_package.get("boundary_eps0"),
-        "conformal_q": model_package.get("conformal_q"),
-    })
-
-
 # ============================================================
-# 7. Parameter inputs
+# 7. Sidebar inputs
 # ============================================================
 
-st.markdown("### 📊 Model Parameter Input")
+with st.sidebar:
+    st.markdown("### ① Geometry")
+    D = st.number_input("Outer diameter D (mm)", value=315.0, min_value=1.0, format="%.3f")
+    t = st.number_input("Wall thickness t (mm)", value=2.0, min_value=0.01, format="%.3f")
+    L = st.number_input("Length L (mm)", value=750.0, min_value=1.0, format="%.3f")
+    h = st.number_input("Corrugation height h (mm)", value=25.0, min_value=0.0, format="%.3f")
+    l = st.number_input("Corrugation spacing l (mm)", value=75.0, min_value=0.01, format="%.3f")
 
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("**🔧 Geometric parameters**")
-    D = st.number_input("D - Outer diameter (mm)", value=315.0, min_value=1.0, format="%.3f")
-    t = st.number_input("t - Wall thickness (mm)", value=2.0, min_value=0.01, format="%.3f")
-    L = st.number_input("L - Length (mm)", value=750.0, min_value=1.0, format="%.3f")
-    h = st.number_input("h - Corrugation height (mm)", value=25.0, min_value=0.0, format="%.3f")
-    l = st.number_input("l - Corrugation spacing (mm)", value=75.0, min_value=0.01, format="%.3f")
-
-with col2:
-    st.markdown("**🧱 Material and concrete type**")
-    fcu = st.number_input("fcu - Concrete cube compressive strength (MPa)", value=40.0, min_value=0.01, format="%.3f")
-    fy = st.number_input("fy - Steel yield strength (MPa)", value=235.0, min_value=0.01, format="%.3f")
-    K = st.number_input("K - Wave number", value=10.0, min_value=0.0, format="%.3f")
+    st.markdown("### ② Materials")
+    fcu = st.number_input("Concrete strength fcu (MPa)", value=40.0, min_value=0.01, format="%.3f")
+    fy = st.number_input("Steel yield strength fy (MPa)", value=235.0, min_value=0.01, format="%.3f")
+    K = st.number_input("Wave number K", value=10.0, min_value=0.0, format="%.3f")
 
     concrete_mapping = (model_package.get("categorical_mappings", {}) or {}).get("Concrete Types", None)
     if concrete_mapping is not None:
@@ -863,53 +975,55 @@ with col2:
                     default_index = i
                     break
             concrete_type_value = st.selectbox(
-                "Concrete Types",
+                "Concrete type",
                 options=concrete_options,
                 index=default_index,
-                help="Categories are read from the saved training mapping.",
+                help="Options are taken from the saved training categorical mapping.",
             )
     else:
         concrete_type_value = st.number_input(
-            "Concrete Types / rubber replacement ratio",
+            "Concrete type / rubber ratio",
             value=0.0,
             min_value=0.0,
             max_value=1.0,
             format="%.3f",
-            help="The saved model package treats Concrete Types as numeric.",
         )
 
-with col3:
-    st.markdown("**📈 Eccentricity and strain range**")
-
+    st.markdown("### ③ Loading path")
     eccentricity_mode = st.radio(
-        "Eccentricity input mode",
-        ["Input e/r directly", "Input eccentricity e (mm)"],
-        horizontal=False,
+        "Eccentricity input",
+        ["e/r", "e in mm"],
+        horizontal=True,
     )
-
-    if eccentricity_mode == "Input e/r directly":
-        e_over_r = st.number_input("e/r - Eccentricity ratio", value=0.20, min_value=0.0, format="%.4f")
+    if eccentricity_mode == "e/r":
+        e_over_r = st.number_input("Eccentricity ratio e/r", value=0.20, min_value=0.0, format="%.4f")
         e_mm = e_over_r * (D / 2.0)
     else:
-        e_mm = st.number_input("e - Eccentricity (mm)", value=30.0, min_value=0.0, format="%.3f")
+        e_mm = st.number_input("Eccentricity e (mm)", value=30.0, min_value=0.0, format="%.3f")
         e_over_r = e_mm / (D / 2.0) if D > 0 else 0.0
 
+    st.markdown("### ④ Curve settings")
     start_strain = st.number_input("Start strain", value=0.000, format="%.6f")
     end_strain = st.number_input("End strain", value=0.030, format="%.6f")
-    N_points = st.number_input("Number of curve points", value=101, min_value=10, max_value=1000, step=1)
+    N_points = st.slider("Curve points", min_value=20, max_value=500, value=101, step=1)
 
-    include_conformal = st.checkbox(
-        "Show conformal prediction interval if available",
+    include_conformal = st.toggle(
+        "Show conformal interval",
         value=model_package.get("conformal_q", None) is not None,
+        disabled=model_package.get("conformal_q", None) is None,
     )
-
+    apply_extra_zero_constraint = st.toggle(
+        "Force zero load at zero strain",
+        value=True,
+        help="The model already applies BoundaryFactor; this is an extra GUI-level safeguard.",
+    )
 
 # ============================================================
 # 8. Validation and derived parameters
 # ============================================================
 
 if start_strain >= end_strain:
-    st.error("❌ Start strain must be less than end strain.")
+    st.error("❌ Start strain must be smaller than end strain.")
     st.stop()
 
 if t >= D / 2.0:
@@ -919,8 +1033,6 @@ if t >= D / 2.0:
 if any(val <= 0 for val in [D, t, L, fcu, fy]):
     st.error("❌ D, t, L, fcu and fy must be greater than 0.")
     st.stop()
-
-st.markdown("### 🔧 Calculated Derived Parameters")
 
 D_over_t = D / t
 L_over_D = L / D
@@ -934,26 +1046,14 @@ else:
 
 amplification_factor = calculate_amplification_factor(h_over_l)
 
-if amplification_factor == 1.0 and h > 0:
-    st.markdown(
-        f"""
-        <div class="warning-box">
-        ⚠️ <strong>Warning:</strong> h/l = {h_over_l:.3f} is outside the preset corrugation ranges.
-        The steel-area amplification factor is set to 1.0.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-area_method = st.radio(
-    "Concrete core area calculation",
+area_method = st.sidebar.radio(
+    "Concrete core area",
     [
         "Database-compatible: Ac = π(D - t)² / 4",
         "Physical inner diameter: Ac = π(D - 2t)² / 4",
     ],
     index=0,
-    horizontal=True,
-    help="Use the same formula as the training database whenever possible.",
+    help="Use the database-compatible option if you want consistency with the training data.",
 )
 
 if area_method.startswith("Database-compatible"):
@@ -962,50 +1062,25 @@ else:
     Ac = math.pi * max(D - 2.0 * t, 0.0) ** 2 / 4.0
 
 As = math.pi * D * t * amplification_factor
-
-# MPa = N/mm², so fcuAc and fyAs are in N. The model divides by 1000 internally to obtain kN scale.
 fcuAc = fcu * Ac
 fyAs = fy * As
-
 steel_ratio = As / Ac if Ac > 1e-12 else 0.0
 confinement_factor = steel_ratio * fy / fcu if fcu > 1e-12 else 0.0
 
-param_col1, param_col2, param_col3, param_col4 = st.columns(4)
-
-with param_col1:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-    st.metric("D/t", f"{D_over_t:.3f}")
-    st.metric("L/D", f"{L_over_D:.3f}")
-    st.metric("Helix angle", f"{helix_angle:.2f}°")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with param_col2:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-    st.metric("Ac", f"{Ac:.0f} mm²")
-    st.metric("As", f"{As:.0f} mm²")
-    st.metric("Amplification factor", f"{amplification_factor:.3f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with param_col3:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-    st.metric("fcuAc", f"{fcuAc:.0f} N")
-    st.metric("fyAs", f"{fyAs:.0f} N")
-    st.metric("Confinement factor", f"{confinement_factor:.3f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with param_col4:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-    st.metric("h/l", f"{h_over_l:.3f}")
-    st.metric("e", f"{e_mm:.2f} mm")
-    st.metric("e/r", f"{e_over_r:.4f}")
-    st.markdown("</div>", unsafe_allow_html=True)
-
+if amplification_factor == 1.0 and h > 0:
+    st.markdown(
+        f"""
+        <div class="status-warn">
+        ⚠️ h/l = {h_over_l:.3f} is outside the preset corrugation ranges.
+        The steel-area amplification factor is set to 1.0.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ============================================================
 # 9. Prediction
 # ============================================================
-
-st.markdown("### 📈 Prediction Results")
 
 strain_values = np.linspace(float(start_strain), float(end_strain), int(N_points))
 
@@ -1025,35 +1100,15 @@ df_raw_input = build_raw_curve_input(
     model_package=model_package,
 )
 
-with st.expander("🔍 View model input data and feature construction", expanded=False):
-    st.write("**Raw input to model package**")
-    st.dataframe(df_raw_input.head(10), use_container_width=True)
-    st.write("**Required raw feature columns from model package**")
-    st.write(raw_feature_cols)
-
 try:
-    with st.spinner("Predicting load–strain curve using MultiPhysics-DGS-CA..."):
+    with st.spinner("Running MultiPhysics-DGS-CA inference..."):
         Nu_predicted_raw, X_model, aux = predict_capacity_with_new_model(df_raw_input, model_package)
-
-        # The new model already applies BoundaryFactor and zero-strain constraint internally.
-        # This extra checkbox is only a defensive option for GUI output.
-        apply_extra_zero_constraint = st.checkbox(
-            "Apply extra GUI zero-strain constraint",
-            value=True,
-            help="The new model already uses BoundaryFactor; this is an additional output-level safeguard.",
-        )
-        constraint_tolerance = st.number_input(
-            "Zero-strain tolerance",
-            value=1e-12,
-            format="%.2e",
-            disabled=not apply_extra_zero_constraint,
-        )
 
         if apply_extra_zero_constraint:
             Nu_predicted, constraint_applied = apply_optional_zero_constraint(
                 strain_values,
                 Nu_predicted_raw,
-                tolerance=constraint_tolerance,
+                tolerance=1e-12,
             )
         else:
             Nu_predicted = Nu_predicted_raw.copy()
@@ -1063,21 +1118,14 @@ try:
         if y_lower is None or y_upper is None:
             include_conformal = False
 
-    st.success(f"✅ Prediction completed. Generated {len(Nu_predicted)} curve points.")
-
 except Exception as exc:
     st.error(f"❌ Prediction failed: {exc}")
-    st.write("**Debugging information**")
-    st.write("Raw input shape:", df_raw_input.shape)
-    st.write("Raw input columns:", list(df_raw_input.columns))
-    st.write("Model raw_feature_cols:", raw_feature_cols)
-    st.write("Model model_feature_cols:", model_feature_cols)
+    with st.expander("Debugging information", expanded=True):
+        st.write("Raw input shape:", df_raw_input.shape)
+        st.write("Raw input columns:", list(df_raw_input.columns))
+        st.write("Model raw_feature_cols:", raw_feature_cols)
+        st.write("Model model_feature_cols:", model_feature_cols)
     st.stop()
-
-
-# ============================================================
-# 10. Result table and plot
-# ============================================================
 
 base_names = list(model_package.get("base_model_names", []))
 weights = aux["weights"]
@@ -1118,216 +1166,292 @@ for j, name in enumerate(base_names):
             model_package,
         )
 
-result_col1, result_col2 = st.columns([1, 2])
+# Smoothing controls in main page
+controls_l, controls_m, controls_r = st.columns([1, 1, 1])
+with controls_l:
+    apply_smoothing = st.toggle("Smooth curve", value=True)
+with controls_m:
+    window_size = st.slider("Smoothing window", 3, 101, 9, step=2, disabled=not apply_smoothing)
+with controls_r:
+    show_internal_curves = st.toggle("Show model internals", value=False)
 
-with result_col1:
-    st.markdown("**📋 Prediction Data**")
-    st.dataframe(result_df, use_container_width=True, height=450)
-
-    st.markdown("**📊 Statistical Information**")
-    st.write(f"- Maximum capacity: {np.max(Nu_predicted):.2f} kN")
-    st.write(f"- Minimum capacity: {np.min(Nu_predicted):.2f} kN")
-    st.write(f"- Average capacity: {np.mean(Nu_predicted):.2f} kN")
-    st.write(f"- Capacity range: {np.max(Nu_predicted) - np.min(Nu_predicted):.2f} kN")
-    st.write(f"- Final ratio mean: {np.mean(aux['final_ratio_pred']):.4f}")
-    st.write(f"- Physics baseline peak: {np.max(result_df['BoundaryFactor'] * result_df['N_phy']):.2f} kN")
-
-    csv = result_df.to_csv(index=False, encoding="utf-8-sig")
-    st.download_button(
-        label="📥 Download Prediction Data (CSV)",
-        data=csv,
-        file_name=f"multiphy_dgs_ca_curve_prediction_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv",
-    )
-
-with result_col2:
-    st.markdown("**📊 Load–Strain Curve**")
-
-    smooth_col1, smooth_col2, smooth_col3 = st.columns(3)
-
-    with smooth_col1:
-        apply_smoothing = st.checkbox("Apply curve smoothing", value=True)
-        window_size = st.number_input(
-            "Window size",
-            value=9,
-            min_value=3,
-            max_value=101,
-            step=2,
-            disabled=not apply_smoothing,
-        )
-
-    with smooth_col2:
-        poly_order = st.number_input(
-            "Polynomial order",
-            value=2,
-            min_value=1,
-            max_value=5,
-            disabled=not apply_smoothing,
-        )
-        show_original = st.checkbox("Show unsmoothed curve", value=True)
-
-    with smooth_col3:
-        show_physics_baseline = st.checkbox("Show physics baseline", value=False)
-        show_conformal_band = st.checkbox(
-            "Show conformal band",
-            value=include_conformal,
-            disabled=not include_conformal,
-        )
-
-    if apply_smoothing:
-        try:
-            smoothed_Nu = safe_savgol(Nu_predicted, window_size, poly_order)
-            smoothed_Nu = np.maximum(smoothed_Nu, 0.0)
-            zero_mask = np.isclose(strain_values, 0.0, atol=1e-12, rtol=0.0)
-            smoothed_Nu[zero_mask] = 0.0
-        except Exception as exc:
-            st.warning(f"Smoothing failed: {exc}")
-            smoothed_Nu = Nu_predicted
-    else:
+if apply_smoothing:
+    try:
+        smoothed_Nu = safe_savgol(Nu_predicted, window_size, 2)
+        smoothed_Nu = np.maximum(smoothed_Nu, 0.0)
+        smoothed_Nu[np.isclose(strain_values, 0.0, atol=1e-12, rtol=0.0)] = 0.0
+    except Exception:
         smoothed_Nu = Nu_predicted
+else:
+    smoothed_Nu = Nu_predicted
 
-    fig, ax = plt.subplots(figsize=(12, 7.5))
+peak_idx = int(np.nanargmax(smoothed_Nu))
+peak_strain = strain_values[peak_idx]
+peak_Nu = smoothed_Nu[peak_idx]
+physics_baseline = result_df["BoundaryFactor"].to_numpy() * result_df["N_phy"].to_numpy()
 
-    if show_conformal_band and y_lower is not None and y_upper is not None:
-        ax.fill_between(
-            strain_values,
-            y_lower,
-            y_upper,
-            alpha=0.18,
-            color="#4C78A8",
-            label="Conformal interval",
+# ============================================================
+# 10. Dashboard cards
+# ============================================================
+
+card_cols = st.columns(5)
+card_data = [
+    ("Peak load", f"{peak_Nu:.2f}", "kN"),
+    ("Peak strain", f"{peak_strain:.6f}", ""),
+    ("e/r", f"{e_over_r:.4f}", ""),
+    ("Confinement", f"{confinement_factor:.3f}", ""),
+    ("Mean R_final", f"{np.mean(aux['final_ratio_pred']):.4f}", ""),
+]
+
+for col, (label, value, unit) in zip(card_cols, card_data):
+    with col:
+        st.markdown(
+            f"""
+            <div class="mini-card">
+                <div class="mini-label">{label}</div>
+                <div class="mini-value">{value}<span class="mini-unit">{unit}</span></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-    if show_physics_baseline:
-        physics_baseline = result_df["BoundaryFactor"].to_numpy() * result_df["N_phy"].to_numpy()
-        ax.plot(
-            strain_values,
-            physics_baseline,
-            linestyle=":",
-            linewidth=2.0,
-            color="gray",
-            label="Physics baseline",
-        )
+tab_curve, tab_parameters, tab_data, tab_diagnostics, tab_model = st.tabs(
+    ["📈 Prediction curve", "🧾 Parameters", "📋 Data table", "🧩 Diagnostics", "⚙️ Model"]
+)
 
-    if show_original and apply_smoothing:
+with tab_curve:
+    left, right = st.columns([2.2, 1.0])
+
+    with left:
+        fig, ax = plt.subplots(figsize=(11.8, 6.8))
+
+        if include_conformal and y_lower is not None and y_upper is not None:
+            ax.fill_between(
+                strain_values,
+                y_lower,
+                y_upper,
+                alpha=0.16,
+                color="#1F5EFF",
+                label="Conformal interval",
+            )
+
         ax.plot(
             strain_values,
             Nu_predicted,
             linestyle="--",
-            linewidth=1.6,
-            alpha=0.70,
-            color="#8AB6D6",
-            label="Original prediction",
+            linewidth=1.4,
+            alpha=0.62,
+            color="#7FA8D8",
+            label="Raw prediction",
         )
 
-    ax.plot(
-        strain_values,
-        smoothed_Nu,
-        linewidth=2.7,
-        color="#C23B22",
-        label="Smoothed prediction" if apply_smoothing else "Prediction",
+        ax.plot(
+            strain_values,
+            smoothed_Nu,
+            linewidth=2.8,
+            color="#C23B22",
+            label="Smoothed prediction" if apply_smoothing else "Prediction",
+        )
+
+        if show_internal_curves:
+            ax.plot(
+                strain_values,
+                physics_baseline,
+                linestyle=":",
+                linewidth=2.0,
+                color="#5F6773",
+                label="Physics baseline",
+            )
+
+        ax.scatter(
+            peak_strain,
+            peak_Nu,
+            color="#0B1F4D",
+            s=115,
+            zorder=5,
+            edgecolors="white",
+            linewidth=1.5,
+            label="Peak",
+        )
+
+        y_span = max(np.nanmax(smoothed_Nu) - np.nanmin(smoothed_Nu), 1.0)
+        ax.annotate(
+            f"Peak = {peak_Nu:.2f} kN\nε = {peak_strain:.6f}",
+            xy=(peak_strain, peak_Nu),
+            xytext=(min(peak_strain + 0.14 * (end_strain - start_strain), end_strain), peak_Nu + 0.11 * y_span),
+            arrowprops=dict(arrowstyle="->", color="#0B1F4D", lw=1.35),
+            fontsize=10.8,
+            bbox=dict(boxstyle="round,pad=0.35", facecolor="white", edgecolor="#0B1F4D", alpha=0.96),
+        )
+
+        ax.set_xlabel("Strain", fontsize=13, fontweight="bold")
+        ax.set_ylabel(r"Predicted load $N_u$ (kN)", fontsize=13, fontweight="bold")
+        ax.set_title(f"{ALGORITHM_TITLE} load–strain curve", fontsize=15, fontweight="bold", pad=15)
+        ax.grid(True, alpha=0.25, linestyle="--")
+        ax.legend(fontsize=10.5, frameon=True, loc="best")
+
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_linewidth(1.2)
+        ax.spines["bottom"].set_linewidth(1.2)
+
+        y_min = min(0.0, float(np.nanmin(smoothed_Nu)))
+        y_max = float(np.nanmax(smoothed_Nu))
+        y_margin = max((y_max - y_min) * 0.10, 1.0)
+        ax.set_ylim(y_min - 0.02 * y_margin, y_max + y_margin)
+
+        fig.tight_layout()
+        st.pyplot(fig, use_container_width=True)
+
+    with right:
+        st.markdown(
+            f"""
+            <div class="panel">
+                <div class="panel-title">Prediction summary</div>
+                <div class="panel-caption">
+                    The reported peak is calculated from the displayed curve.
+                </div>
+                <div class="formula-box">
+                    <b>Nu_pred</b> = BoundaryFactor × N_phy × R_final<br>
+                    <b>R_final</b> = α_anchor R_DGS + (1 − α_anchor) R_CatBoost
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.metric("Maximum capacity", f"{np.max(Nu_predicted):.2f} kN")
+        st.metric("Average capacity", f"{np.mean(Nu_predicted):.2f} kN")
+        st.metric("Physics baseline peak", f"{np.max(physics_baseline):.2f} kN")
+        st.metric("Anchor alpha", f"{float(model_package.get('anchor_alpha', 1.0)):.4f}")
+
+with tab_parameters:
+    st.markdown('<div class="panel"><div class="panel-title">Derived input parameters</div></div>', unsafe_allow_html=True)
+
+    p1, p2, p3, p4 = st.columns(4)
+    with p1:
+        st.metric("D/t", f"{D_over_t:.3f}")
+        st.metric("L/D", f"{L_over_D:.3f}")
+        st.metric("Helix angle", f"{helix_angle:.2f}°")
+    with p2:
+        st.metric("Ac", f"{Ac:.0f} mm²")
+        st.metric("As", f"{As:.0f} mm²")
+        st.metric("Amplification factor", f"{amplification_factor:.3f}")
+    with p3:
+        st.metric("fcuAc", f"{fcuAc:.0f} N")
+        st.metric("fyAs", f"{fyAs:.0f} N")
+        st.metric("Steel ratio", f"{steel_ratio:.4f}")
+    with p4:
+        st.metric("h/l", f"{h_over_l:.3f}")
+        st.metric("e", f"{e_mm:.2f} mm")
+        st.metric("Confinement factor", f"{confinement_factor:.3f}")
+
+    with st.expander("View raw model input", expanded=False):
+        st.dataframe(df_raw_input.head(20), use_container_width=True)
+        st.write("Required raw feature columns:", raw_feature_cols)
+
+with tab_data:
+    st.dataframe(result_df, use_container_width=True, height=520)
+
+    csv = result_df.to_csv(index=False, encoding="utf-8-sig")
+    st.download_button(
+        label="📥 Download prediction data as CSV",
+        data=csv,
+        file_name=f"multiphy_dgs_ca_curve_prediction_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv",
+        use_container_width=True,
     )
 
-    peak_idx = int(np.nanargmax(smoothed_Nu))
-    peak_strain = strain_values[peak_idx]
-    peak_Nu = smoothed_Nu[peak_idx]
+with tab_diagnostics:
+    d1, d2 = st.columns([1.05, 1.0])
 
-    ax.scatter(
-        peak_strain,
-        peak_Nu,
-        color="black",
-        s=110,
-        zorder=5,
-        label="Peak point",
-        edgecolors="white",
-        linewidth=1.5,
+    with d1:
+        st.markdown('<div class="panel"><div class="panel-title">Dynamic gating weights</div></div>', unsafe_allow_html=True)
+        if len(base_names) > 0 and weights.ndim == 2:
+            fig_w, ax_w = plt.subplots(figsize=(8.4, 4.6))
+            for j, name in enumerate(base_names):
+                if j < weights.shape[1]:
+                    ax_w.plot(strain_values, weights[:, j], linewidth=2.0, label=name)
+            ax_w.set_xlabel("Strain", fontsize=12)
+            ax_w.set_ylabel("Gating weight", fontsize=12)
+            ax_w.set_ylim(0, 1.05)
+            ax_w.grid(True, alpha=0.25, linestyle="--")
+            ax_w.legend(frameon=False, ncol=min(3, len(base_names)))
+            fig_w.tight_layout()
+            st.pyplot(fig_w, use_container_width=True)
+        else:
+            st.info("No gating weights available.")
+
+    with d2:
+        st.markdown('<div class="panel"><div class="panel-title">Correction ratios</div></div>', unsafe_allow_html=True)
+        fig_r, ax_r = plt.subplots(figsize=(8.4, 4.6))
+        ax_r.plot(strain_values, aux["final_ratio_pred"], linewidth=2.4, label="R_final", color="#C23B22")
+        ax_r.plot(strain_values, aux["dgs_ratio_pred"], linewidth=1.8, linestyle="--", label="R_DGS", color="#1F5EFF")
+        if np.isfinite(aux["anchor_ratio_pred"]).any():
+            ax_r.plot(strain_values, aux["anchor_ratio_pred"], linewidth=1.8, linestyle=":", label="R_CatBoost", color="#13A8A8")
+        ax_r.set_xlabel("Strain", fontsize=12)
+        ax_r.set_ylabel("Correction ratio", fontsize=12)
+        ax_r.grid(True, alpha=0.25, linestyle="--")
+        ax_r.legend(frameon=False)
+        fig_r.tight_layout()
+        st.pyplot(fig_r, use_container_width=True)
+
+    st.markdown('<div class="panel"><div class="panel-title">Point diagnostics at peak</div></div>', unsafe_allow_html=True)
+    diag_cols = st.columns(4)
+    with diag_cols[0]:
+        st.metric("Peak R_final", f"{aux['final_ratio_pred'][peak_idx]:.4f}")
+    with diag_cols[1]:
+        st.metric("Peak N_phy", f"{result_df['N_phy'].iloc[peak_idx]:.2f} kN")
+    with diag_cols[2]:
+        st.metric("Peak BoundaryFactor", f"{result_df['BoundaryFactor'].iloc[peak_idx]:.3f}")
+    with diag_cols[3]:
+        if len(base_names) >= 3 and weights.shape[1] >= 3:
+            st.metric("Peak weights", f"{weights[peak_idx,0]:.2f} / {weights[peak_idx,1]:.2f} / {weights[peak_idx,2]:.2f}")
+        else:
+            st.metric("Peak index", str(peak_idx))
+
+with tab_model:
+    st.markdown(
+        f"""
+        <div class="panel">
+            <div class="panel-title">Model package</div>
+            <div class="panel-caption">
+                <b>Loaded model:</b> {algorithm_name}<br>
+                <b>Full name:</b> {algorithm_full_name}<br>
+                <b>Formula:</b> Nu_pred = BoundaryFactor × N_phy × R_final
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    offset_x = max((end_strain - start_strain) * 0.12, 1e-6)
-    y_span = max(np.max(smoothed_Nu) - np.min(smoothed_Nu), 1.0)
-    offset_y = 0.10 * y_span
-
-    ax.annotate(
-        f"Peak: {peak_Nu:.2f} kN\nStrain: {peak_strain:.6f}",
-        xy=(peak_strain, peak_Nu),
-        xytext=(min(peak_strain + offset_x, end_strain), peak_Nu + offset_y),
-        arrowprops=dict(arrowstyle="->", color="black", lw=1.3),
-        fontsize=11,
-        bbox=dict(boxstyle="round,pad=0.35", facecolor="white", alpha=0.92, edgecolor="black"),
-    )
-
-    ax.set_xlabel("Strain", fontsize=14, fontweight="bold")
-    ax.set_ylabel(r"Predicted load $N_u$ (kN)", fontsize=14, fontweight="bold")
-    ax.set_title(
-        f"{ALGORITHM_TITLE} Load–Strain Curve Prediction",
-        fontsize=16,
-        fontweight="bold",
-        pad=18,
-    )
-
-    ax.grid(True, alpha=0.28, linestyle="--")
-    ax.legend(fontsize=11, frameon=True)
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_linewidth(1.4)
-    ax.spines["bottom"].set_linewidth(1.4)
-
-    y_min = min(0.0, float(np.min(smoothed_Nu)))
-    y_max = float(np.max(smoothed_Nu))
-    y_margin = max((y_max - y_min) * 0.10, 1.0)
-    ax.set_ylim(y_min - 0.02 * y_margin, y_max + y_margin)
-
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-
-
-# ============================================================
-# 11. Summary
-# ============================================================
-
-st.markdown("### 🎯 Prediction Summary")
-
-summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
-
-with summary_col1:
-    st.success(f"🏆 **Peak load**\n\n{peak_Nu:.2f} kN")
-
-with summary_col2:
-    st.info(f"📍 **Peak strain**\n\n{peak_strain:.6f}")
-
-with summary_col3:
-    ultimate_idx = int(len(strain_values) * 0.90)
-    ultimate_idx = min(max(ultimate_idx, 0), len(strain_values) - 1)
-    ultimate_Nu = smoothed_Nu[ultimate_idx]
-    st.warning(f"📈 **90% curve-point load**\n\n{ultimate_Nu:.2f} kN")
-
-with summary_col4:
-    st.metric("e/r", f"{e_over_r:.4f}")
-    st.metric("Confinement factor", f"{confinement_factor:.3f}")
-
-st.markdown("### 🧩 Model Internal Outputs")
-
-internal_col1, internal_col2, internal_col3 = st.columns(3)
-
-with internal_col1:
-    st.metric("Mean R_final", f"{np.mean(aux['final_ratio_pred']):.4f}")
-    st.metric("Peak R_final", f"{aux['final_ratio_pred'][peak_idx]:.4f}")
-
-with internal_col2:
-    st.metric("Mean N_phy", f"{np.mean(result_df['N_phy']):.2f} kN")
-    st.metric("Peak N_phy", f"{result_df['N_phy'].iloc[peak_idx]:.2f} kN")
-
-with internal_col3:
-    st.metric("Anchor alpha", f"{float(model_package.get('anchor_alpha', 1.0)):.4f}")
-    if len(base_names) >= 3 and weights.shape[1] >= 3:
-        st.metric("Peak weights", f"xgb={weights[peak_idx,0]:.2f}, lgbm={weights[peak_idx,1]:.2f}, cat={weights[peak_idx,2]:.2f}")
+    m1, m2 = st.columns(2)
+    with m1:
+        st.write("**Raw feature columns**")
+        st.write(raw_feature_cols)
+        st.write("**Base model names**")
+        st.write(base_model_names)
+        st.write("**Anchor formula**")
+        st.write(model_package.get("anchor_formula", "Not available"))
+    with m2:
+        st.write("**Model feature columns**")
+        st.write(model_feature_cols)
+        st.write("**Physics parameters**")
+        st.json({
+            "alpha": model_package.get("physics_alpha"),
+            "beta": model_package.get("physics_beta"),
+            "gamma": model_package.get("physics_gamma"),
+            "boundary_mode": model_package.get("boundary_mode"),
+            "boundary_eps0": model_package.get("boundary_eps0"),
+            "conformal_q": model_package.get("conformal_q"),
+        })
 
 st.markdown(
     """
-    ---
-    **Note.** `N0_Enhanced`, `PhysicsReduction`, `N_phy`, and `BoundaryFactor`
-    are internal physics-guided features reconstructed by the app from the
-    saved model package. They are not manual GUI inputs.
-    """
+    <div class="footer-note">
+        <b>Note.</b> N0_Enhanced, PhysicsReduction, N_phy, and BoundaryFactor are
+        reconstructed internally from the saved model package. They are not manual GUI inputs.
+        Keep all input units consistent with the training database.
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
