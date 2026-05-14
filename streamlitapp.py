@@ -585,8 +585,7 @@ def build_raw_curve_input(
     D,
     t,
     L,
-    h,
-    l,
+    h_over_l,
     helix_angle,
     fcuAc,
     fyAs,
@@ -599,7 +598,6 @@ def build_raw_curve_input(
 
     D_over_t = D / t
     L_over_D = L / D
-    h_over_l = h / l if abs(l) > 1e-12 else 0.0
 
     base_values = {
         "D/t": D_over_t,
@@ -954,13 +952,25 @@ with st.sidebar:
     D = st.number_input("Outer diameter D (mm)", value=315.0, min_value=1.0, format="%.3f")
     t = st.number_input("Wall thickness t (mm)", value=2.0, min_value=0.01, format="%.3f")
     L = st.number_input("Length L (mm)", value=750.0, min_value=1.0, format="%.3f")
-    h = st.number_input("Corrugation height h (mm)", value=25.0, min_value=0.0, format="%.3f")
-    l = st.number_input("Corrugation spacing l (mm)", value=75.0, min_value=0.01, format="%.3f")
+    h_over_l = st.number_input(
+        "Corrugation ratio h/l",
+        value=25.0 / 75.0,
+        min_value=0.0,
+        format="%.5f",
+        help="Directly enter h/l because it is one of the raw features used during model training.",
+    )
+    helix_angle = st.number_input(
+        "Helix Angle (degree)",
+        value=37.20,
+        min_value=0.0,
+        max_value=90.0,
+        format="%.3f",
+        help="Directly enter the helix angle because it is one of the raw features used during model training.",
+    )
 
     st.markdown("### ② Materials")
     fcu = st.number_input("Concrete strength fcu (MPa)", value=40.0, min_value=0.01, format="%.3f")
     fy = st.number_input("Steel yield strength fy (MPa)", value=235.0, min_value=0.01, format="%.3f")
-    K = st.number_input("Wave number K", value=10.0, min_value=0.0, format="%.3f")
 
     concrete_mapping = (model_package.get("categorical_mappings", {}) or {}).get("Concrete Types", None)
     if concrete_mapping is not None:
@@ -1036,14 +1046,9 @@ if any(val <= 0 for val in [D, t, L, fcu, fy]):
 
 D_over_t = D / t
 L_over_D = L / D
-h_over_l = h / l if abs(l) > 1e-12 else 0.0
 
-if K != 0 and l != 0:
-    B = l * K
-    helix_angle = math.degrees(math.atan(B / (math.pi * D)))
-else:
-    helix_angle = 0.0
-
+# h/l and Helix Angle are now direct GUI inputs because both are raw features
+# used during model training.
 amplification_factor = calculate_amplification_factor(h_over_l)
 
 area_method = st.sidebar.radio(
@@ -1067,7 +1072,7 @@ fyAs = fy * As
 steel_ratio = As / Ac if Ac > 1e-12 else 0.0
 confinement_factor = steel_ratio * fy / fcu if fcu > 1e-12 else 0.0
 
-if amplification_factor == 1.0 and h > 0:
+if amplification_factor == 1.0 and h_over_l > 0:
     st.markdown(
         f"""
         <div class="status-warn">
@@ -1089,8 +1094,7 @@ df_raw_input = build_raw_curve_input(
     D=D,
     t=t,
     L=L,
-    h=h,
-    l=l,
+    h_over_l=h_over_l,
     helix_angle=helix_angle,
     fcuAc=fcuAc,
     fyAs=fyAs,
@@ -1450,7 +1454,8 @@ st.markdown(
     <div class="footer-note">
         <b>Note.</b> N0_Enhanced, PhysicsReduction, N_phy, and BoundaryFactor are
         reconstructed internally from the saved model package. They are not manual GUI inputs.
-        Keep all input units consistent with the training database.
+        Keep all input units consistent with the training database. The corrugation ratio h/l
+        and Helix Angle are entered directly because they are raw training features.
     </div>
     """,
     unsafe_allow_html=True,
