@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.env
+.venv/
+venv/
+*.log
+
+# 如果模型文件太大，不建议提交到 GitHub。
+# 需要提交模型时，可删除下面这一行。
+models/*.pkl
+
+# 保留 models 文件夹
+!models/.gitkeep
