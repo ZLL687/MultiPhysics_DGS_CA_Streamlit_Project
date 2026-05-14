@@ -25,6 +25,7 @@ Prediction logic:
 
 import io
 import math
+import re
 import warnings
 from pathlib import Path
 
@@ -76,7 +77,8 @@ MODEL_PACKAGE_PATH = MODEL_DIR / "ea_pgcc_dgs_ca_model_package.pkl"
 
 # Optional: paste your Google Drive file ID here if you want automatic download.
 # Leave empty if you prefer local file or manual upload.
-MODEL_PACKAGE_GDRIVE_ID = ""
+MODEL_PACKAGE_GDRIVE_ID = "1TVYByfRL6Nt2WMQ2MEG9XBNKj_ZXxUC0"
+MODEL_PACKAGE_GDRIVE_URL = "https://drive.google.com/file/d/1TVYByfRL6Nt2WMQ2MEG9XBNKj_ZXxUC0/view?usp=drive_link"
 
 DEFAULT_RAW_FEATURE_COLS = [
     "D/t",
@@ -155,34 +157,148 @@ class DynamicGatedStackingRegressor:
 # 2. Model loading utilities
 # ============================================================
 
-def download_from_gdrive(file_id, output_path):
+def extract_google_drive_file_id(url_or_id):
+    """
+    Accept either a Google Drive sharing URL or a raw file ID.
+    """
+    text = str(url_or_id or "").strip()
+    if not text:
+        return ""
+
+    match = re.search(r"/d/([a-zA-Z0-9_-]+)", text)
+    if match:
+        return match.group(1)
+
+    match = re.search(r"[?&]id=([a-zA-Z0-9_-]+)", text)
+    if match:
+        return match.group(1)
+
+    return text
+
+
+def patch_simple_imputer_for_sklearn_compatibility(imputer):
+    """
+    Compatibility patch for sklearn SimpleImputer objects loaded from older
+    joblib/pickle files. This avoids errors such as:
+        'SimpleImputer' object has no attribute '_fill_dtype'
+    """
+    if not isinstance(imputer, SimpleImputer):
+        return imputer
+
+    if hasattr(imputer, "statistics_"):
+        stats = np.asarray(imputer.statistics_)
+        dtype = stats.dtype if stats.dtype != object else np.dtype(float)
+    else:
+        dtype = np.dtype(float)
+
+    if not hasattr(imputer, "_fit_dtype"):
+        imputer._fit_dtype = dtype
+    if not hasattr(imputer, "_fill_dtype"):
+        imputer._fill_dtype = dtype
+    if not hasattr(imputer, "keep_empty_features"):
+        imputer.keep_empty_features = False
+
+    return imputer
+
+
+def patch_pipeline_imputers_for_sklearn_compatibility(estimator):
+    """Patch SimpleImputer instances inside sklearn Pipelines."""
+    if estimator is None:
+        return estimator
+
+    if isinstance(estimator, SimpleImputer):
+        return patch_simple_imputer_for_sklearn_compatibility(estimator)
+
+    if hasattr(estimator, "named_steps"):
+        for _, step in estimator.named_steps.items():
+            patch_pipeline_imputers_for_sklearn_compatibility(step)
+
+    return estimator
+
+
+def patch_model_package_for_sklearn_compatibility(model_package):
+    """
+    Patch SimpleImputer objects inside the loaded MultiPhysics-DGS-CA package.
+    """
+    try:
+        model = model_package.get("model", None) if isinstance(model_package, dict) else None
+        if model is None:
+            return model_package
+
+        for _, estimator in getattr(model, "final_estimators_", []):
+            patch_pipeline_imputers_for_sklearn_compatibility(estimator)
+
+        for gate_model in getattr(model, "gate_models_", []):
+            patch_pipeline_imputers_for_sklearn_compatibility(gate_model)
+
+        patch_pipeline_imputers_for_sklearn_compatibility(getattr(model, "gate_model", None))
+
+        for _, estimator in getattr(model, "base_estimators", []):
+            patch_pipeline_imputers_for_sklearn_compatibility(estimator)
+
+    except Exception as exc:
+        st.warning(f"Model compatibility patch issued a warning: {exc}")
+
+    return model_package
+
+
+
+def download_from_gdrive(file_id_or_url, output_path):
     """Download model package from Google Drive if gdown is available."""
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    file_id = extract_google_drive_file_id(file_id_or_url)
     if not file_id:
         return False
 
     if gdown is None:
-        st.error("gdown is not installed. Please install it or use manual upload.")
+        st.error("gdown is not installed. Please add `gdown` to requirements.txt.")
         return False
 
-    if output_path.exists() and output_path.stat().st_size > 0:
+    if output_path.exists() and output_path.stat().st_size > 1024:
         return True
 
     with st.spinner(f"Downloading {output_path.name} from Google Drive..."):
         try:
-            url = f"https://drive.google.com/uc?id={file_id}&export=download"
-            gdown.download(url, str(output_path), quiet=False)
-            return output_path.exists() and output_path.stat().st_size > 0
+            try:
+                downloaded_path = gdown.download(
+                    id=file_id,
+                    output=str(output_path),
+                    quiet=False,
+                    fuzzy=True,
+                )
+            except TypeError:
+                url = f"https://drive.google.com/uc?id={file_id}&export=download"
+                downloaded_path = gdown.download(url, str(output_path), quiet=False)
+
+            ok = (
+                downloaded_path is not None
+                and output_path.exists()
+                and output_path.stat().st_size > 1024
+            )
+
+            if not ok:
+                st.error(
+                    "Download failed or downloaded file is invalid. "
+                    "Please make sure the Google Drive file permission is set to "
+                    "'Anyone with the link can view'."
+                )
+            return ok
+
         except Exception as exc:
             st.error(f"Download failed: {exc}")
+            st.info(
+                "Please check that the Google Drive model file is shared as "
+                "'Anyone with the link can view'."
+            )
             return False
-
 
 def load_model_package_from_path(model_path):
     try:
-        return joblib.load(model_path)
+        model_package = joblib.load(model_path)
+        model_package = patch_model_package_for_sklearn_compatibility(model_package)
+        return model_package
     except Exception as exc:
         st.error(f"Model package loading failed: {exc}")
         return None
@@ -190,7 +306,9 @@ def load_model_package_from_path(model_path):
 
 def load_model_package_from_upload(uploaded_file):
     try:
-        return joblib.load(io.BytesIO(uploaded_file.read()))
+        model_package = joblib.load(io.BytesIO(uploaded_file.read()))
+        model_package = patch_model_package_for_sklearn_compatibility(model_package)
+        return model_package
     except Exception as exc:
         st.error(f"Uploaded model package loading failed: {exc}")
         return None
@@ -614,11 +732,24 @@ st.markdown(
 
 st.markdown('<div class="upload-container">', unsafe_allow_html=True)
 st.markdown("### 📁 Model Package")
+st.info("Model package source: Google Drive auto-download is enabled.")
 
 model_package = None
 
-local_exists = MODEL_PACKAGE_PATH.exists() and MODEL_PACKAGE_PATH.stat().st_size > 0
-use_manual_upload = st.checkbox("Use manual model package upload", value=not local_exists)
+local_exists = MODEL_PACKAGE_PATH.exists() and MODEL_PACKAGE_PATH.stat().st_size > 1024
+auto_download_available = bool(MODEL_PACKAGE_GDRIVE_ID or globals().get("MODEL_PACKAGE_GDRIVE_URL", ""))
+default_manual_upload = (not local_exists) and (not auto_download_available)
+
+st.caption(
+    "The app will first try to use the local model package. "
+    "If it is not available, it will automatically download the package from Google Drive."
+)
+
+use_manual_upload = st.checkbox(
+    "Use manual model package upload",
+    value=default_manual_upload,
+    help="Only enable this if automatic Google Drive download fails or you want to upload another model package.",
+)
 
 if use_manual_upload:
     uploaded_package = st.file_uploader(
@@ -635,8 +766,9 @@ if use_manual_upload:
 
 else:
     if not local_exists:
-        if MODEL_PACKAGE_GDRIVE_ID:
-            ok = download_from_gdrive(MODEL_PACKAGE_GDRIVE_ID, MODEL_PACKAGE_PATH)
+        gdrive_source = globals().get("MODEL_PACKAGE_GDRIVE_URL", "") or MODEL_PACKAGE_GDRIVE_ID
+        if gdrive_source:
+            ok = download_from_gdrive(gdrive_source, MODEL_PACKAGE_PATH)
             if not ok:
                 st.error("❌ Could not download model package. Please use manual upload.")
                 st.stop()
